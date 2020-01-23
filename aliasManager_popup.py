@@ -1,3 +1,5 @@
+#
+
 # ============================================================================================================
 # ============================================================================================================
 # ==                                                                                                        ==
@@ -101,6 +103,10 @@ class p():
             column_to = self.d3.currentText()
             row_from = self.d4.value()
             row_to = self.d5.value()
+	
+            mysheet = App.ActiveDocument.getObjectsByLabel(self.dx.currentText())[0]
+
+
 
 
 # ===== Mode - Set ==============================================
@@ -108,8 +114,8 @@ class p():
                 for i in range(row_from,row_to+1):
                     cell_from = 'A' + str(i)
                     cell_to = str(column_from) + str(i)
-                    App.ActiveDocument.Spreadsheet.setAlias(cell_to, '')
-                    App.ActiveDocument.Spreadsheet.setAlias(cell_to, App.ActiveDocument.Spreadsheet.getContents(cell_from))
+                    mysheet.setAlias(cell_to, '')
+                    mysheet.setAlias(cell_to, mysheet.getContents(cell_from))
                     App.ActiveDocument.recompute()
 
                 FreeCAD.Console.PrintMessage("\nAliases set\n")
@@ -119,7 +125,7 @@ class p():
             elif mode == "Clear aliases":
                 for i in range(row_from,row_to+1):
                     cell_to = str(column_from) + str(i)
-                    App.ActiveDocument.Spreadsheet.setAlias(cell_to, '')
+                    mysheet.setAlias(cell_to, '')
                     App.ActiveDocument.recompute()
 
                 FreeCAD.Console.PrintMessage("\nAliases cleared\n")
@@ -133,9 +139,9 @@ class p():
                     cell_reference = 'A'+ str(i)                        
                     cell_from = column_from + str(i)
                     cell_to = column_to + str(i)
-                    App.ActiveDocument.Spreadsheet.setAlias(cell_from, '')
+                    mysheet.setAlias(cell_from, '')
                     App.ActiveDocument.recompute()
-                    App.ActiveDocument.Spreadsheet.setAlias(cell_to, App.ActiveDocument.Spreadsheet.getContents(cell_reference))
+                    mysheet.setAlias(cell_to, mysheet.getContents(cell_reference))
                     App.ActiveDocument.recompute()
                 FreeCAD.Console.PrintMessage("\nAliases moved\n")
 
@@ -164,14 +170,14 @@ class p():
                         cell_reference = 'A' + str(i)
                         cell_from = str(fam_range[index-1]) + str(i)
                         cell_to = str(fam_range[index]) + str(i)
-                        App.ActiveDocument.Spreadsheet.setAlias(cell_from, '')
+                        mysheet.setAlias(cell_from, '')
                         App.ActiveDocument.recompute()
-                        App.ActiveDocument.Spreadsheet.setAlias(cell_to, App.ActiveDocument.Spreadsheet.getContents(cell_reference))
+                        mysheet.setAlias(cell_to, mysheet.getContents(cell_reference))
                         App.ActiveDocument.recompute()
                         sfx = str(fam_range[index]) + '1'
 
                     # save file
-                    suffix = App.ActiveDocument.Spreadsheet.getContents(sfx)
+                    suffix = mysheet.getContents(sfx)
                     filename = filePrefix + '_' + suffix + '.fcstd'
                     filePath = os.path.join(docDir, filename)
                 
@@ -181,7 +187,7 @@ class p():
                 # Clear last aliases created:
                 for j in range(row_from,row_to+1):
                     cell_to = str(column_to) + str(j)
-                    App.ActiveDocument.Spreadsheet.setAlias(cell_to, '')
+                    mysheet.setAlias(cell_to, '')
                 App.ActiveDocument.recompute()
 
                 # Turn working file to original naming:
@@ -268,6 +274,13 @@ class p():
         self.d1.setCurrentIndex(0) # set default item
         self.d1.currentIndexChanged['QString'].connect(disableWidget)
  
+        iN2x = QtGui.QLabel("sheet:")
+        iN2x.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.dx = QtGui.QComboBox()
+        for obj in App.ActiveDocument.Objects:
+            if obj.TypeId == 'Spreadsheet::Sheet':
+                self.dx.addItem(obj.Label)
+
         iN2a = QtGui.QLabel("column:")
         iN2a.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         iN2b = QtGui.QLabel("from")
@@ -323,22 +336,24 @@ class p():
         # Mode
         grid.addWidget(self.d1, 0, 0, 1, 3)
         # column, column from
-        grid.addWidget(iN2a,    2, 0, 1, 1)
-        grid.addWidget(iN2b,    1, 1, 1, 1)
-        grid.addWidget(self.d2, 2, 1, 1, 1)
+        grid.addWidget(iN2x,    1, 0, 1, 1)
+        grid.addWidget(self.dx, 1, 1, 1, 1)
+        grid.addWidget(iN2a,    3, 0, 1, 1)
+        grid.addWidget(iN2b,    2, 1, 1, 1)
+        grid.addWidget(self.d2, 3, 1, 1, 1)
         # column to
-        grid.addWidget(iN3,     1, 2, 1, 1)
-        grid.addWidget(self.d3, 2, 2, 1, 1)
+        grid.addWidget(iN3,     2, 2, 1, 1)
+        grid.addWidget(self.d3, 3, 2, 1, 1)
         # from row
-        grid.addWidget(iN4,     3, 0, 1, 1)
-        grid.addWidget(self.d4, 3, 1, 1, 1)
+        grid.addWidget(iN4,     4, 0, 1, 1)
+        grid.addWidget(self.d4, 4, 1, 1, 1)
         # to row
-        grid.addWidget(iN5,     4, 0, 1, 1)
-        grid.addWidget(self.d5, 4, 1)
+        grid.addWidget(iN5,     5, 0, 1, 1)
+        grid.addWidget(self.d5, 5, 1)
         # + info
-        grid.addWidget(self.d6, 6, 0, 1, 1)
+        grid.addWidget(self.d6, 7, 0, 1, 1)
         # cancel, OK
-        grid.addWidget(okbox,   6, 1, 1, 2)
+        grid.addWidget(okbox,   7, 1, 1, 2)
 
         self.dialog.setLayout(grid)
 
@@ -359,4 +374,5 @@ class p():
     def popup(self):
         self.dialog2 = infoPopup()
         self.dialog2.exec_()
-p() 
+p()
+
